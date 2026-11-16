@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Drag Remap</title>
 <style>
-:root{--bg:#f4f5f7;--panel:#fff;--fg:#1f2430;--sub:#6b7280;--line:#d6d9e0;--key:#fff;--keyline:#b9bfcc;--acc:#2f6fed;--dirty:#f59e0b;--ok:#16a34a;--drop:#dbe8ff}
-@media (prefers-color-scheme:dark){:root{--bg:#14161b;--panel:#1d2027;--fg:#e8eaf0;--sub:#9aa1b0;--line:#2f3440;--key:#262a33;--keyline:#454b5a;--acc:#6ea0ff;--dirty:#fbbf24;--ok:#4ade80;--drop:#26375e}}
+/* ダークテーマ固定 */
+:root{color-scheme:dark;--bg:#14161b;--panel:#1d2027;--fg:#e8eaf0;--sub:#9aa1b0;--line:#2f3440;--key:#262a33;--keyline:#454b5a;--acc:#6ea0ff;--dirty:#fbbf24;--ok:#4ade80;--drop:#26375e}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,"Yu Gothic UI",sans-serif}
 header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
@@ -162,14 +162,25 @@ function labelOf(c){
 /* ---------- キーボード定義 ---------- */
 function mk(keys, rows, cols, name, layers){ return {name, keys, rows, cols, mrows:rows, mcols:cols, nenc:0, layers, custom:{}}; }
 function keyball61(){
-  const keys=[], cmap=[0,1,2,4,5,6,7];
-  for (let r=0;r<5;r++){ const n=(r>=3)?7:6;
-    for (let c=0;c<n;c++){ keys.push({l:"L"+r+c,row:r,col:cmap[c],x:c,y:r});
-      keys.push({l:"R"+r+c,row:5+r,col:cmap[c],x:13-c,y:r}); } }
-  const d=mk(keys,10,8,"Keyball61",4); d.order=[]; d.layoutName="LAYOUT_universal";
+  // 参考画像(Remap画面)に合わせたピクセル座標レイアウト。右手はボール側(R42-R44なし)
+  const cmap=[0,1,2,4,5,6,7];
+  const LX=[48,123,198,272,347,422];
+  const LY=[[107,181,255,330,408],[107,181,257,331,408],[83,157,232,306,381],[63,138,213,287,362],[72,148,222,297],[77,157,232,306]];
+  const RX=[1206,1132,1057,982,907,833];
+  const RY=[[108,183,257,331,408],[108,183,257,331,408],[80,150,232,298],[60,138,213,287],[75,148,222,297],[80,157,232,306]];
+  const keys=[]; const W=68;
+  const add=(l,row,col,cx,cy,rot=0)=>keys.push({l,row,col,cx,cy,w:W,h:W,rot});
+  for(let c=0;c<6;c++) LY[c].forEach((y,r)=>add("L"+r+c,r,cmap[c],LX[c],y));
+  add("L36",3,cmap[6],497,317);
+  add("L44",4,cmap[4],369,400); add("L45",4,cmap[5],453,395,8); add("L46",4,cmap[6],527,415,15);
+  for(let c=0;c<6;c++) RY[c].forEach((y,r)=>add("R"+r+c,5+r,cmap[c],RX[c],y));
+  add("R36",8,cmap[6],758,317);
+  add("R45",9,cmap[5],801,405,-8); add("R46",9,cmap[6],710,415,-15);
+  const d=mk(keys,10,8,"Keyball61",4); d.px=[1255,489]; d.layoutName="LAYOUT_universal"; d.order=[];
+  const m=(side,r,c)=>[side==="L"?r:5+r,cmap[c]];
   for(let r=0;r<5;r++){ const n=r>=3?7:6;
-    for(let c=0;c<n;c++){const k=keys.find(k=>k.l==="L"+r+c); d.order.push([k.row,k.col]);}
-    for(let c=n-1;c>=0;c--){const k=keys.find(k=>k.l==="R"+r+c); d.order.push([k.row,k.col]);} }
+    for(let c=0;c<n;c++) d.order.push(m("L",r,c));
+    for(let c=n-1;c>=0;c--) d.order.push(m("R",r,c)); }
   return d;
 }
 function killerwhale(){
@@ -270,7 +281,7 @@ function renderKb(){
     const code=km[layer][k.row][k.col], e=document.createElement("div");
     const d=code!==orig[layer]?.[k.row]?.[k.col]&&(code!==orig[layer][k.row][k.col]);
     e.className="key"+(d?" dirty":"")+(sel===idx?" sel":"")+(code===0?" none":code===1?" trans":"");
-    e.style.cssText=k.cx?`left:${k.cx-k.w/2}px;top:${k.cy-k.h/2}px;width:${k.w}px;height:${k.h}px`:`left:${(k.x-minx)*U}px;top:${k.y*U}px;width:${(k.w||1)*U-4}px;height:${(k.h||1)*U-4}px`;
+    e.style.cssText=k.cx?`left:${k.cx-k.w/2}px;top:${k.cy-k.h/2}px;width:${k.w}px;height:${k.h}px${k.rot?`;transform:rotate(${k.rot}deg)`:''}`:`left:${(k.x-minx)*U}px;top:${k.y*U}px;width:${(k.w||1)*U-4}px;height:${(k.h||1)*U-4}px`;
     if(k.cls) e.className+=" "+k.cls;
     e.innerHTML=(k.l&&!dev.px?`<small>${k.l}</small>`:"")+"<div>"+labelHtml(code)+"</div>"; e.title=`${k.l||""} [${k.row},${k.col}] 0x${code.toString(16).padStart(4,"0")}`;
     e.draggable=true;

@@ -1,0 +1,8 @@
+VIA_ENABLE = yes
+VIAL_ENABLE = yes
+ENCODER_MAP_ENABLE = yes
+COMBO_ENABLE = yes
+TAP_DANCE_ENABLE = yes
+POINTING_DEVICE_AUTO_MOUSE_ENABLE = yes
+# ビルドが容量不足になった場合のみ有効化
+# LTO_ENABLE = yes
